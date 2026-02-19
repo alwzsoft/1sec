@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Project One-Sec: Countdown</title>
+    <style>
+        body { background-color: black; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: 'Courier New', Courier, monospace; margin: 0; overflow: hidden; }
+        h1 { font-size: 2rem; margin-bottom: 20px; color: #ff4d4f; letter-spacing: 2px; text-shadow: 0 0 10px rgba(255, 77, 79, 0.7); }
+        
+        #timer { font-size: 4.5rem; font-weight: bold; font-variant-numeric: tabular-nums; margin-bottom: 40px; }
+        .ms { font-size: 2.5rem; color: #ff4d4f; margin-left: 5px; }
+
+        .download-container { text-align: center; border: 1px dashed #444; padding: 30px; border-radius: 8px; background: rgba(20, 20, 20, 0.8); position: relative; }
+        .status-text { color: #888; font-size: 0.9rem; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .download-btn { background-color: #222; color: #555; border: 2px solid #444; padding: 15px 40px; font-size: 1.2rem; font-weight: bold; text-decoration: none; cursor: not-allowed; transition: all 0.3s ease; display: inline-block; }
+        .download-btn.active { background-color: #ff4d4f; color: white; border-color: #ff4d4f; cursor: pointer; box-shadow: 0 0 20px rgba(255, 77, 79, 0.4); }
+
+        /* 중지 버튼 스타일 */
+        .stop-zone { margin-top: 20px; }
+        .stop-btn { background: transparent; color: #333; border: 1px solid #333; padding: 5px 15px; cursor: pointer; font-size: 0.8rem; transition: 0.3s; }
+        .stop-btn:hover { color: #ff4d4f; border-color: #ff4d4f; }
+
+        .footer { margin-top: 40px; font-size: 1rem; color: #444; }
+    </style>
+</head>
+<body>
+    <h1>PROJECT ONE-SEC: THE TRUTH OF NAVER</h1>
+    
+    <div id="timer">
+        <span id="main-time">00d 00h 00m 00s</span><span id="ms-time" class="ms">00</span>
+    </div>
+
+    <div class="download-container">
+        <div id="status" class="status-text">🔒 Source Code Encrypted & Pending Release</div>
+        <a href="#" id="downloadBtn" class="download-btn">DOWNLOAD v1.0.0 (ZIP)</a>
+        
+        <div class="stop-zone">
+            <button class="stop-btn" onclick="requestStop()">Emergency Stop</button>
+        </div>
+    </div>
+
+    <div class="footer">Target: search.naver.com / blog.naver.com</div>
+
+    <script>
+        // "1500"에 대한 SHA-256 해시값 (소스코드만 봐서는 암호를 알 수 없음)
+        const SECRET_HASH = "80f688ca8c8a165f17173e351834e94326f634d0b64d142f36d4df0f7ca72d02";
+        const targetDate = new Date("March 14, 2026 09:00:00").getTime();
+        let isStopped = false;
+
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function requestStop() {
+            const password = prompt("협상 타결 시 부여된 비상 정지 코드를 입력하십시오.");
+            if (!password) return;
+
+            const inputHash = await sha256(password);
+            if (inputHash === SECRET_HASH) {
+                isStopped = true;
+                alert("SYSTEM HALTED: 배포 프로세스가 중지되었습니다.");
+                document.getElementById("status").innerHTML = "🛑 PROCESS HALTED BY AUTHORITY";
+                document.getElementById("status").style.color = "#ff4d4f";
+            } else {
+                alert("ACCESS DENIED: 유효하지 않은 코드입니다.");
+            }
+        }
+
+        function updateTimer() {
+            if (isStopped) return; // 중지 상태면 업데이트 안함
+
+            const now = new Date().getTime();
+            const distance = targetDate - now;
+
+            if (distance <= 0) {
+                document.getElementById("main-time").innerHTML = "DISTRIBUTION STARTED";
+                document.getElementById("ms-time").innerHTML = "";
+                document.getElementById("downloadBtn").classList.add("active");
+                return;
+            }
+
+            const d = Math.floor(distance / (1000 * 60 * 60 * 24)).toString().padStart(2, '0');
+            const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
+            const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+            const s = Math.floor((distance % (1000 * 60)) / 1000).toString().padStart(2, '0');
+            const mil = Math.floor((distance % 1000) / 10).toString().padStart(2, '0');
+
+            document.getElementById("main-time").innerHTML = `${d}d ${h}h ${m}m ${s}s`;
+            document.getElementById("ms-time").innerHTML = `.${mil}`;
+
+            requestAnimationFrame(updateTimer);
+        }
+
+        requestAnimationFrame(updateTimer);
+    </script>
+</body>
+</html>
